@@ -102,7 +102,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self.hosts += MessageToDict(hosts)["instances"]
 
     def _init_client(self):
-        sdk = yandexcloud.SDK(token=self.get_option('yacloud_token'))
+        sdk = yandexcloud.SDK(token=str(self.get_option('yacloud_token')))
 
         self.instance_service = sdk.client(InstanceServiceStub)
         self.folder_service = sdk.client(FolderServiceStub)
