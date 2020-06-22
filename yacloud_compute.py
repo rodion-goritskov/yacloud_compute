@@ -73,7 +73,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         for interface in interfaces:
             address = interface["primaryV4Address"]
             if address:
-                if address["oneToOneNat"]:
+                if address.get("oneToOneNat"):
                     return address["oneToOneNat"]["address"]
                 else:
                     return address["address"]
@@ -99,7 +99,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self.hosts = []
         for folder in self.folders:
             hosts = self.instance_service.List(ListInstancesRequest(folder_id=folder["id"]))
-            self.hosts += MessageToDict(hosts)["instances"]
+            dict_ = MessageToDict(hosts)
+
+            if dict_:
+                self.hosts += dict_["instances"]
 
     def _init_client(self):
         sdk = yandexcloud.SDK(token=str(self.get_option('yacloud_token')))
