@@ -31,6 +31,10 @@ DOCUMENTATION = '''
             description: Names of folders to get hosts from
             type: list
             default: []
+        yacloud_group_label:
+            description: VM's label used for group assignment
+            type: string
+            default: ""
             
 '''
 
@@ -112,12 +116,19 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         self.cloud_service = sdk.client(CloudServiceStub)
 
     def _process_hosts(self):
-        self.inventory.add_group(group="yacloud")
+        group_label = str(self.get_option('yacloud_group_label'))
+
         for instance in self.hosts:
+            if group_label and group_label in instance["labels"]:
+                group = instance["labels"][group_label]
+            else:
+                group = "yacloud"
+            
+            self.inventory.add_group(group=group)
             if instance["status"] == "RUNNING":
                 ip = self._get_ip_for_instance(instance)
                 if ip:
-                    self.inventory.add_host(instance["name"], group="yacloud")
+                    self.inventory.add_host(instance["name"], group=group)
                     self.inventory.set_variable(instance["name"], 'ansible_host', to_native(ip))
 
     def parse(self, inventory, loader, path, cache=True):
