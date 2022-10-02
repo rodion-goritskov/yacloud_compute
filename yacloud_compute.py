@@ -22,7 +22,8 @@ DOCUMENTATION = '''
             choices: ['yacloud_compute']
         yacloud_token:
             description: Oauth token for yacloud connection
-            required: True
+        yacloud_token_file:
+            description: File with oauth token for yacloud connection
         yacloud_clouds:
             description: Names of clouds to get hosts from
             type: list
@@ -109,7 +110,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 self.hosts += dict_["instances"]
 
     def _init_client(self):
-        sdk = yandexcloud.SDK(token=str(self.get_option('yacloud_token')))
+        file = self.get_option('yacloud_token_file')
+        if file is not None:
+            token = open(file).read().strip()
+        else:
+            token = self.get_option('yacloud_token')
+        if not token:
+            raise AnsibleError("token it empty. provide either `yacloud_token_file` or `yacloud_token`")
+        sdk = yandexcloud.SDK(token=token)
 
         self.instance_service = sdk.client(InstanceServiceStub)
         self.folder_service = sdk.client(FolderServiceStub)
@@ -123,7 +131,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                 group = instance["labels"][group_label]
             else:
                 group = "yacloud"
-            
+
             self.inventory.add_group(group=group)
             if instance["status"] == "RUNNING":
                 ip = self._get_ip_for_instance(instance)
