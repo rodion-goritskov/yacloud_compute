@@ -111,12 +111,18 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def _init_client(self):
         file = self.get_option('yacloud_token_file')
+        token_var = self._vars.get("yacloud_token")
+        
         if file is not None:
             token = open(file).read().strip()
+        elif token_var is not None:
+            token = token_var
         else:
             token = self.get_option('yacloud_token')
         if not token:
-            raise AnsibleError("token it empty. provide either `yacloud_token_file` or `yacloud_token`")
+            raise AnsibleError(
+                "token it empty. provide either "
+                "`yacloud_token_file` or `yacloud_token`")
         sdk = yandexcloud.SDK(token=token)
 
         self.instance_service = sdk.client(InstanceServiceStub)
